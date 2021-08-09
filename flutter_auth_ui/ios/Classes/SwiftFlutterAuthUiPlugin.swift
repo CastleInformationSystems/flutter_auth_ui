@@ -99,18 +99,19 @@ public class SwiftFlutterAuthUiPlugin: NSObject, FlutterPlugin, FUIAuthDelegate 
     // to Flutter, so maybe in the future a callback into flutter to handle merging data
     // into the new account could be done.
     public func authUI(_ authUI: FUIAuth, didSignInWith authDataResult: AuthDataResult?, error: Error?) {
-        var finalDataResult: AuthDataResult? = authDataResult
-        
         if let error = error as NSError?, error.code == FUIAuthErrorCode.mergeConflict.rawValue {
             // Merge conflict error, discard the anonymous user and login as the existing non-anonymous user.
             if let credential = error.userInfo[FUIAuthCredentialKey] as? AuthCredential {
                 Auth.auth().signIn(with: credential) { (dataResult, error) in
-                    finalDataResult = dataResult
+                    self.result?(dataResult?.user != nil)
+                    self.result = nil
                 }
+                
+                return
             }
         }
         
-        result?(finalDataResult?.user != nil)
+        result?(authDataResult?.user != nil)
         result = nil
     }
     
