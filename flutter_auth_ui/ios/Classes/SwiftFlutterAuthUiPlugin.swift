@@ -87,11 +87,33 @@ public class SwiftFlutterAuthUiPlugin: NSObject, FlutterPlugin, FUIAuthDelegate 
         return url
     }
 
-    public func authUI(_ authUI: FUIAuth, didSignInWith user: User?, error: Error?) {
-        result?(user != nil)
+    // Beacon: commented out by JSS 8/9/2021
+//    public func authUI(_ authUI: FUIAuth, didSignInWith user: User?, error: Error?) {
+//        result?(user != nil)
+//        result = nil
+//    }
+    
+    // Beacon: added by JSS 8/9/2021 to handle anonymous account upgrades a little better.
+    // Rather than failing when a merge conflict exists, disgard the anonymous account in
+    // favor of the signed in one. It's not clear how to serialize the credentials to return
+    // to Flutter, so maybe in the future a callback into flutter to handle merging data
+    // into the new account could be done.
+    public func authUI(_ authUI: FUIAuth, didSignInWith authDataResult: AuthDataResult?, error: Error?) {
+        var finalDataResult: AuthDataResult? = authDataResult
+        
+        if let error = error as NSError?, error.code == FUIAuthErrorCode.mergeConflict.rawValue {
+            // Merge conflict error, discard the anonymous user and login as the existing non-anonymous user.
+            if let credential = error.userInfo[FUIAuthCredentialKey] as? AuthCredential {
+                Auth.auth().signIn(with: credential) { (dataResult, error) in
+                    finalDataResult = dataResult
+                }
+            }
+        }
+        
+        result?(finalDataResult?.user != nil)
         result = nil
     }
-
+    
     private var result: FlutterResult?
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
