@@ -122,7 +122,20 @@ class FlutterAuthUiWeb {
 
         return false;
       }),
-      signInFailure: allowInterop((error) {
+      signInFailure: allowInterop((error) async {
+        // For merge conflicts, the error.code will be
+        // 'firebaseui/anonymous-upgrade-merge-conflict'.
+        if (error.code == 'firebaseui/anonymous-upgrade-merge-conflict') {
+          // The credential the user tried to sign in with.
+          var cred = error.credential;
+          await auth().signInWithCredential(cred);
+
+          completer.complete(auth().currentUser != null);
+          html.window.history.back();
+
+          return;
+        }
+
         completer.completeError(error);
         html.window.history.back();
       }),
