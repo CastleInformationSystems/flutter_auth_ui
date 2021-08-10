@@ -111,8 +111,16 @@ public class SwiftFlutterAuthUiPlugin: NSObject, FlutterPlugin, FUIAuthDelegate 
             }
         }
         
-        result?(authDataResult?.user != nil)
-        result = nil
+        if let authDataResult = authDataResult, let credential = authDataResult.credential {
+            Auth.auth().signIn(with: credential) { (dataResult, error) in
+                self.result?(dataResult?.user != nil)
+                self.result = nil
+            }
+        }
+        else {
+            result?(authDataResult?.user != nil)
+            result = nil
+        }
     }
     
     private var result: FlutterResult?
