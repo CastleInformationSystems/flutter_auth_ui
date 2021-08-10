@@ -10,7 +10,13 @@ import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.ErrorCodes;
+import com.firebase.ui.auth.IdpResponse;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.ActionCodeSettings;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -75,6 +81,34 @@ public class FlutterAuthUiPlugin implements FlutterPlugin, MethodCallHandler, Ac
                         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                         result.success(user != null);
                     } else {
+                        // Modified by JSS on 8/10/2021 to handle anonymous upgrade merge conflicts.
+
+                        // Sign in failed
+                        IdpResponse response = IdpResponse.fromResultIntent(data);
+                        if (response.getError().getErrorCode() == ErrorCodes.ANONYMOUS_UPGRADE_MERGE_CONFLICT) {
+                            // Get the non-anonymous credential from the response
+                            AuthCredential nonAnonymousCredential = response.getCredentialForLinking();
+                            // Sign in with credential
+                            FirebaseAuth.getInstance().signInWithCredential(nonAnonymousCredential)
+                                    .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                                        @Override
+                                        public void onSuccess(AuthResult authResult) {
+                                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                            result.success(user != null);
+                                            result = null;
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            result.error("-1", e.getMessage(), null);
+                                            result = null;
+                                        }
+                                    });
+
+                            return true;
+                        }
+
                         result.error(String.valueOf(resultCode), "error result", null);
                     }
 
