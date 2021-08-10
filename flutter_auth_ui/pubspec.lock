@@ -107,9 +107,11 @@ packages:
   flutter_auth_ui_web:
     dependency: "direct main"
     description:
-      name: flutter_auth_ui_web
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "flutter_auth_ui_web/"
+      ref: "2.3.0"
+      resolved-ref: e41f641756081e01df582f6b9964f2a023ef179d
+      url: "git@github.com:CastleInformationSystems/flutter_auth_ui.git"
+    source: git
     version: "1.0.4"
   flutter_lints:
     dependency: "direct dev"

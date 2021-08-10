@@ -19,7 +19,11 @@ dependencies:
     sdk: flutter
   firebase_auth: ^3.0.0
   flutter_plugin_android_lifecycle: ^2.0.0
-  flutter_auth_ui_web: ^1.0.0
+  flutter_auth_ui_web:
+    git:
+      url: git@github.com:CastleInformationSystems/flutter_auth_ui.git
+      ref: 2.3.0
+      path: flutter_auth_ui_web/
 
 dev_dependencies:
   flutter_test:
